@@ -91,7 +91,13 @@ def original_dst(sock):
         return (ip,port)
     except socket.error, e:
         if e.args[0] == errno.ENOPROTOOPT:
-            peer = sock.getpeername()
+            try:
+              peer = sock.getpeername()
+            except socket.error, e:
+              if e.args[0] == errno.EINVAL:
+                # getpeername() fails when port scan (nmap) closes socket
+                debug2("ERROR: sock.getpeername() %s\nSocket is probably closed.\n" % e)
+                raise
 
             output = ssubprocess.Popen(["sudo", "-n", "/sbin/pfctl", "-s", "state"],
                 stdout=ssubprocess.PIPE,
@@ -207,7 +213,12 @@ def onaccept(listener, mux, handlers):
             return
         else:
             raise
-    dstip = original_dst(sock)
+    try:
+      dstip = original_dst(sock)
+    except socket.error, e:
+      sock.close()
+      return
+
     debug1('Accept: %s:%r -> %s:%r.\n' % (srcip[0],srcip[1],
                                           dstip[0],dstip[1]))
     if dstip[1] == listener.getsockname()[1] and islocal(dstip[0]):
