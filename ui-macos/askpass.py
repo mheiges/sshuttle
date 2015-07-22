@@ -24,5 +24,7 @@ def askpass(prompt):
         return None
     g = re.match("text returned:(.*), button returned:.*", out)
     if not g:
-        return None
+        g = re.match("button returned:.*, text returned:(.*)", out)
+        if not g:
+            return None
     return g.group(1)
