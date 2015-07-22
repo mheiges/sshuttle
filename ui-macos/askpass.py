@@ -21,10 +21,10 @@ def askpass(prompt):
     out = p.stdout.read()
     rv = p.wait()
     if rv:
-        return None
+        return ''
     g = re.match("text returned:(.*), button returned:.*", out)
     if not g:
         g = re.match("button returned:.*, text returned:(.*)", out)
         if not g:
-            return None
+            return ''
     return g.group(1)
